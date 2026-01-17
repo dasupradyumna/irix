@@ -1,0 +1,10 @@
+name: Summary Template
+description: Describe the summary of the current issue
+assignees: [dasupradyumna]
+body:
+  - type: textarea
+    attributes:
+      label: Summary
+      placeholder: A brief summary of the issue
+    validations:
+      required: true

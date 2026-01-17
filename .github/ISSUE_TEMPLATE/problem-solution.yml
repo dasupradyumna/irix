@@ -1,0 +1,16 @@
+name: Problem-Solution Template
+description: Describe the problem and proposed solution for an issue
+assignees: [dasupradyumna]
+body:
+  - type: textarea
+    attributes:
+      label: Problem
+      placeholder: A clear description of the problem
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Solution
+      placeholder: A concise description of the solution addressing the problem
+    validations:
+      required: true
