@@ -1,0 +1,27 @@
+####################################### IRIX PROJECT MANIFEST ######################################
+
+[workspace]
+resolver = "2"
+
+[workspace.package]
+categories = ["computer-vision"]
+edition = "2021"
+exclude = [".gitignore", ".github/"]
+keywords = ["cv", "ml"]
+license-file = "LICENSE"
+
+# TODO: add as project progresses
+# [workspace.dependencies]
+# [workspace.lints.rust]
+# [workspace.lints.clippy]
+
+[package]
+name = "irix"
+version = "0.0.0"
+description = "A computer vision library supporting both classical and learning based techniques"
+repository = "https://github.com/dasupradyumna/irix"
+categories.workspace = true
+edition.workspace = true
+exclude.workspace = true
+keywords.workspace = true
+license-file.workspace = true
