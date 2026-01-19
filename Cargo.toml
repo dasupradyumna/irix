@@ -2,13 +2,16 @@
 
 [workspace]
 resolver = "2"
+members = ["./crates/*"]
 
 [workspace.package]
 categories = ["computer-vision"]
 edition = "2021"
 exclude = [".gitignore", ".github/"]
 keywords = ["cv", "ml"]
-license-file = "LICENSE"
+license = "MIT"
+repository = "https://github.com/dasupradyumna/irix"
+rust-version = "1.75"
 
 # TODO: add as project progresses
 # [workspace.dependencies]
@@ -19,9 +22,13 @@ license-file = "LICENSE"
 name = "irix"
 version = "0.0.0"
 description = "A computer vision library supporting both classical and learning based techniques"
-repository = "https://github.com/dasupradyumna/irix"
 categories.workspace = true
 edition.workspace = true
 exclude.workspace = true
 keywords.workspace = true
-license-file.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+irix-core = { version = "= 0.0.0", path = "./crates/irix-core" }

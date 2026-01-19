@@ -1,0 +1,21 @@
+############################## MINIMUM SUPPORTED RUST VERSION WORKFLOW #############################
+
+name: MSRV
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@1.75.0
+
+      - name: Compile Check
+        run: cargo check --all
