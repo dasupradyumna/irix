@@ -10,17 +10,17 @@ The structs in this crate must be designed such that semantic violation is a com
 
 ### Stability Guarantees
 
-- All semantics in this document are **frozen from the first minor release `vX.0.0`**, with one
-  [exception](#important-v0xy-semantic-stability).
-  - Any deviation constitutes a breaking semantic change, i.e. a major version bump.
-- Future minor releases are bound by the following rules.
-  - They are allowed to add:
-    - add new semantic types
-    - add new markers
-  - They may **not**:
-    - reinterpret existing semantics
-    - weaken invariants
-    - change coordinate or layout meaning
+All semantics in this document are **frozen from the first minor release `vX.0.0`**, with one
+[exception](#important-v0xy-semantic-stability).
+
+- Any deviation is a **breaking semantic change** and requires a *major version bump*.
+- Future minor releases are allowed to add new primitive structs and semantic markers
+  - They are allowed to optimize and modify implementations
+- They are **not** allowed to:
+  - reinterpret defined semantics
+  - break API or function signatures
+  - change coordinate or layout meaning
+  - weaken existing invariants
 
 #### IMPORTANT: `v0.Y.Z` Semantic Stability
 
