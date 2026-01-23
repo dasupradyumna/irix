@@ -4,13 +4,13 @@
 
 ## Normative Semantics
 
-The following section establishes the **authoritative semantic foundation** of the *irix* ecosystem.  
+This section establishes the **authoritative semantic foundation** of the **irix** ecosystem.  
 No higher-tier crate is allowed to reinterpret, relax, or silently override these meanings.  
 The structs in this crate must be designed such that semantic violation is a compile-time error.
 
 ### Stability Guarantees
 
-- All semantics in this document are **frozen from the first minor release vX.0.0**, with one
+- All semantics in this document are **frozen from the first minor release `vX.0.0`**, with one
   [exception](#important-v0xy-semantic-stability).
   - Any deviation constitutes a breaking semantic change, i.e. a major version bump.
 - Future minor releases are bound by the following rules.
@@ -22,7 +22,7 @@ The structs in this crate must be designed such that semantic violation is a com
     - weaken invariants
     - change coordinate or layout meaning
 
-#### IMPORTANT: v0.Y.Z Semantic Stability
+#### IMPORTANT: `v0.Y.Z` Semantic Stability
 
 [SemVer](https://semver.org/#spec-item-4) allows flexibility for **v0** to not provide any API
 stability guarantees since it is meant for initial development. **irix** will adopt a moderately
