@@ -15,14 +15,14 @@ exception - `v0.y.z`.
 
 - Any deviation is a **breaking semantic change** and requires a *major version bump*.
 - Future minor releases are allowed to add new primitive structs and semantic markers
-  - They are allowed to optimize and modify implementations
+- They are allowed to optimize and modify implementations
 - They are **not** allowed to:
   - reinterpret defined semantics
   - break API or function signatures
   - change coordinate or layout meaning
   - weaken existing invariants
 
-#### `v0.Y.Z` Semantic Stability
+##### `v0.Y.Z` Semantic Stability
 
 [SemVer](https://semver.org/#spec-item-4) allows flexibility for **v0** to not provide any API
 stability guarantees since it is meant for initial development. **irix** will adopt a moderately
