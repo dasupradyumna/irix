@@ -4,10 +4,6 @@
 name = "irix-core"
 version = "0.0.0"
 description = "Implementation crate: Core primitives and semantics for irix"
-categories.workspace = true
+publish = false
 edition.workspace = true
-exclude.workspace = true
-keywords.workspace = true
-license.workspace = true
-repository.workspace = true
 rust-version.workspace = true

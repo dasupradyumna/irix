@@ -31,4 +31,4 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-irix-core = { version = "= 0.0.0", path = "./crates/irix-core" }
+irix-core = { version = "= 0.0.0", path = "./crates/core" }
