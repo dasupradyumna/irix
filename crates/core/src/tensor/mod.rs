@@ -43,7 +43,31 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
 pub mod layout;
-pub mod markers;
 
 mod buffer;
 mod error;
+
+use std::marker::PhantomData;
+
+use self::{
+    buffer::Buffer,
+    layout::{LayoutMarker, RowMajor},
+};
+
+/// Multi-dimensional numeric storage with explicit layout semantics.
+///
+/// # Invariants
+/// - `shape` encodes the extent of every axis (no zero dimensions once constructors enforce it).
+/// - `offset` is a logical index into the underlying buffer and must be non-negative.
+/// - The tuple `(shape, strides, offset)` fully describes how to interpret the shared buffer.
+#[derive(Clone, Debug)]
+pub struct Tensor<const N: usize, T, L = RowMajor>
+where
+    L: LayoutMarker,
+{
+    buffer: Buffer<T>,
+    shape: [usize; N],
+    strides: [isize; N],
+    offset: usize,
+    _layout: PhantomData<L>,
+}
