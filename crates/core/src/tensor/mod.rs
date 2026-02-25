@@ -47,11 +47,16 @@ pub mod layout;
 mod buffer;
 mod error;
 
-use std::marker::PhantomData;
+pub use error::TensorError;
+
+use std::{marker::PhantomData, sync::Arc};
 
 use self::{
     buffer::Buffer,
-    layout::{LayoutMarker, RowMajor},
+    layout::{
+        canonical_column_major_strides, canonical_row_major_strides, LayoutMarker, LayoutOrder,
+        RowMajor,
+    },
 };
 
 /// Multi-dimensional numeric storage with explicit layout semantics.
@@ -70,4 +75,76 @@ where
     strides: [isize; N],
     offset: usize,
     _layout: PhantomData<L>,
+}
+
+impl<const N: usize, T, L> Tensor<N, T, L>
+where
+    L: LayoutMarker,
+{
+    /// Construct a tensor from owned data, validating all invariants.
+    pub fn from_shape_vec(shape: [usize; N], data: Vec<T>) -> Result<Self, TensorError> {
+        validate_shape_dims(&shape)?;
+        let expected_len = element_count(&shape)?;
+        if expected_len != data.len() {
+            return Err(TensorError::LengthMismatch {
+                expected: expected_len,
+                actual: data.len(),
+            });
+        }
+
+        let strides = canonical_strides::<N, L>(&shape)?;
+
+        Ok(Self {
+            buffer: Buffer::from_vec(data),
+            shape,
+            strides,
+            offset: 0,
+            _layout: PhantomData,
+        })
+    }
+
+    /// Construct a tensor without validating invariants.
+    ///
+    /// # Safety
+    /// Caller must guarantee that `shape`, `strides`, and `offset` describe a valid view into
+    /// `data` and uphold the declared layout semantics. Violating these requirements results in
+    /// undefined behavior across tensor APIs.
+    pub unsafe fn new_unchecked(
+        data: Arc<Vec<T>>,
+        shape: [usize; N],
+        strides: [isize; N],
+        offset: usize,
+    ) -> Self {
+        Self {
+            buffer: Buffer::from_arc(data),
+            shape,
+            strides,
+            offset,
+            _layout: PhantomData,
+        }
+    }
+}
+
+fn validate_shape_dims<const N: usize>(shape: &[usize; N]) -> Result<(), TensorError> {
+    if shape.iter().any(|&dim| dim == 0) {
+        return Err(TensorError::InvalidShape);
+    }
+    Ok(())
+}
+
+fn element_count<const N: usize>(shape: &[usize; N]) -> Result<usize, TensorError> {
+    shape
+        .iter()
+        .try_fold(1usize, |acc, &dim| acc.checked_mul(dim).ok_or(TensorError::InvalidShape))
+}
+
+fn canonical_strides<const N: usize, L>(shape: &[usize; N]) -> Result<[isize; N], TensorError>
+where
+    L: LayoutMarker,
+{
+    match L::ORDER {
+        LayoutOrder::RowMajor => canonical_row_major_strides(shape),
+        LayoutOrder::ColumnMajor => canonical_column_major_strides(shape),
+    }
+    .ok_or(TensorError::InvalidShape)
 }

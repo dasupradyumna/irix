@@ -17,6 +17,11 @@ impl<T> Buffer<T> {
         Self { data: Arc::new(data) }
     }
 
+    /// Wrap an existing shared allocation.
+    pub(crate) fn from_arc(data: Arc<Vec<T>>) -> Self {
+        Self { data }
+    }
+
     /// Current logical length of the underlying storage.
     pub(crate) fn len(&self) -> usize {
         self.data.len()
