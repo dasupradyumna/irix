@@ -38,3 +38,12 @@
 //! - Unsafe constructors are allowed but must state their full contract, covering layout consistency,
 //!   bounds validity, and exclusivity assumptions.
 //! - No API—safe or unsafe—may reinterpret layout, axes, or strides behind the caller's back.
+
+// XXX: is this lint too harsh? purely best-practices oriented, worth the ergonomics?
+#![forbid(unsafe_op_in_unsafe_fn)]
+
+pub mod layout;
+pub mod markers;
+
+mod buffer;
+mod error;
