@@ -69,3 +69,13 @@ mod sealed {
     impl Sealed for super::RowMajor {}
     impl Sealed for super::ColumnMajor {}
 }
+/// Compute canonical strides for the provided layout order.
+pub fn canonical_strides_for<const N: usize>(
+    order: LayoutOrder,
+    shape: &[usize; N],
+) -> Option<[isize; N]> {
+    match order {
+        LayoutOrder::RowMajor => canonical_row_major_strides(shape),
+        LayoutOrder::ColumnMajor => canonical_column_major_strides(shape),
+    }
+}

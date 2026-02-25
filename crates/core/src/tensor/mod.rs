@@ -53,10 +53,7 @@ use std::{marker::PhantomData, sync::Arc};
 
 use self::{
     buffer::Buffer,
-    layout::{
-        canonical_column_major_strides, canonical_row_major_strides, LayoutMarker, LayoutOrder,
-        RowMajor,
-    },
+    layout::{canonical_strides_for, LayoutMarker, RowMajor},
 };
 
 /// Multi-dimensional numeric storage with explicit layout semantics.
@@ -92,7 +89,7 @@ where
             });
         }
 
-        let strides = canonical_strides::<N, L>(&shape)?;
+        let strides = canonical_strides_for(L::ORDER, &shape).ok_or(TensorError::InvalidShape)?;
 
         Ok(Self {
             buffer: Buffer::from_vec(data),
@@ -123,6 +120,28 @@ where
             _layout: PhantomData,
         }
     }
+
+    /// Returns the shape (extent of each axis) for this tensor.
+    pub fn shape(&self) -> &[usize; N] {
+        &self.shape
+    }
+
+    /// Returns the strides for each axis, expressed in element offsets.
+    pub fn strides(&self) -> &[isize; N] {
+        &self.strides
+    }
+
+    /// Logical buffer offset for the origin index `(0, ..., 0)`.
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    /// Checks whether this tensor's strides match the canonical layout definition.
+    pub fn is_contiguous(&self) -> bool {
+        canonical_strides_for(L::ORDER, &self.shape)
+            .map(|canonical| canonical == self.strides)
+            .unwrap_or(false)
+    }
 }
 
 fn validate_shape_dims<const N: usize>(shape: &[usize; N]) -> Result<(), TensorError> {
@@ -136,15 +155,4 @@ fn element_count<const N: usize>(shape: &[usize; N]) -> Result<usize, TensorErro
     shape
         .iter()
         .try_fold(1usize, |acc, &dim| acc.checked_mul(dim).ok_or(TensorError::InvalidShape))
-}
-
-fn canonical_strides<const N: usize, L>(shape: &[usize; N]) -> Result<[isize; N], TensorError>
-where
-    L: LayoutMarker,
-{
-    match L::ORDER {
-        LayoutOrder::RowMajor => canonical_row_major_strides(shape),
-        LayoutOrder::ColumnMajor => canonical_column_major_strides(shape),
-    }
-    .ok_or(TensorError::InvalidShape)
 }
