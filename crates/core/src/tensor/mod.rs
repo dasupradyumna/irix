@@ -47,7 +47,7 @@ pub mod layout;
 mod buffer;
 mod error;
 
-pub use error::TensorError;
+pub use error::{TensorError, TensorResult};
 
 use core::{convert::TryFrom, ops::Range};
 use std::{marker::PhantomData, sync::Arc};
@@ -80,7 +80,7 @@ where
     L: LayoutMarker,
 {
     /// Construct a tensor from owned data, validating all invariants.
-    pub fn from_shape_vec(shape: [usize; N], data: Vec<T>) -> Result<Self, TensorError> {
+    pub fn from_shape_vec(shape: [usize; N], data: Vec<T>) -> TensorResult<Self> {
         validate_shape_dims(&shape)?;
         let expected_len = element_count(&shape)?;
         if expected_len != data.len() {
@@ -145,23 +145,29 @@ where
     }
 
     /// Immutable access to the element at `idx` if it lies within the tensor bounds.
-    pub fn get(&self, idx: [usize; N]) -> Option<&T> {
+    pub fn get(&self, idx: [usize; N]) -> TensorResult<&T> {
         let linear = self.linear_index(&idx)?;
-        self.buffer.as_slice().get(linear)
+        self.buffer
+            .as_slice()
+            .get(linear)
+            .ok_or(TensorError::IndexOutOfBounds)
     }
 
     /// Mutable access guarded by explicit aliasing checks; returns `None` if aliased or out of bounds.
-    pub fn get_mut(&mut self, idx: [usize; N]) -> Option<&mut T> {
+    pub fn get_mut(&mut self, idx: [usize; N]) -> TensorResult<&mut T> {
         let linear = self.linear_index(&idx)?;
         if !self.buffer.is_unique() {
-            return None;
+            return Err(TensorError::AliasedMutationForbidden);
         }
-        let slice = self.buffer.as_mut_slice()?;
-        slice.get_mut(linear)
+        let slice = self
+            .buffer
+            .as_mut_slice()
+            .ok_or(TensorError::AliasedMutationForbidden)?;
+        slice.get_mut(linear).ok_or(TensorError::IndexOutOfBounds)
     }
 
     /// Returns a view defined by per-axis ranges sharing the underlying buffer.
-    pub fn slice(&self, ranges: [Range<usize>; N]) -> Result<Self, TensorError> {
+    pub fn slice(&self, ranges: [Range<usize>; N]) -> TensorResult<Self> {
         let mut new_shape = self.shape;
         let mut new_offset =
             isize::try_from(self.offset).map_err(|_| TensorError::IndexOutOfBounds)?;
@@ -197,14 +203,14 @@ where
     }
 }
 
-fn validate_shape_dims<const N: usize>(shape: &[usize; N]) -> Result<(), TensorError> {
+fn validate_shape_dims<const N: usize>(shape: &[usize; N]) -> TensorResult<()> {
     if shape.contains(&0) {
         return Err(TensorError::InvalidShape);
     }
     Ok(())
 }
 
-fn element_count<const N: usize>(shape: &[usize; N]) -> Result<usize, TensorError> {
+fn element_count<const N: usize>(shape: &[usize; N]) -> TensorResult<usize> {
     shape
         .iter()
         .try_fold(1usize, |acc, &dim| acc.checked_mul(dim).ok_or(TensorError::InvalidShape))
@@ -214,21 +220,23 @@ impl<const N: usize, T, L> Tensor<N, T, L>
 where
     L: LayoutMarker,
 {
-    fn linear_index(&self, idx: &[usize; N]) -> Option<usize> {
-        let mut linear = isize::try_from(self.offset).ok()?;
+    fn linear_index(&self, idx: &[usize; N]) -> TensorResult<usize> {
+        let mut linear = isize::try_from(self.offset).map_err(|_| TensorError::IndexOutOfBounds)?;
         for (axis, &coord) in idx.iter().enumerate() {
             if coord >= self.shape[axis] {
-                return None;
+                return Err(TensorError::IndexOutOfBounds);
             }
-            let coord_isize = isize::try_from(coord).ok()?;
-            let step = self.strides[axis].checked_mul(coord_isize)?;
-            linear = linear.checked_add(step)?;
+            let coord_isize = isize::try_from(coord).map_err(|_| TensorError::IndexOutOfBounds)?;
+            let step = self.strides[axis]
+                .checked_mul(coord_isize)
+                .ok_or(TensorError::IndexOutOfBounds)?;
+            linear = linear.checked_add(step).ok_or(TensorError::IndexOutOfBounds)?;
         }
 
-        let linear = usize::try_from(linear).ok()?;
+        let linear = usize::try_from(linear).map_err(|_| TensorError::IndexOutOfBounds)?;
         if linear >= self.buffer.len() {
-            return None;
+            return Err(TensorError::IndexOutOfBounds);
         }
-        Some(linear)
+        Ok(linear)
     }
 }

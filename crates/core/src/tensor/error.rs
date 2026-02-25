@@ -36,3 +36,6 @@ impl fmt::Display for TensorError {
 }
 
 impl std::error::Error for TensorError {}
+
+/// Convenient result type for tensor operations.
+pub type TensorResult<T> = Result<T, TensorError>;
