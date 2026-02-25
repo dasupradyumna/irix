@@ -6,11 +6,13 @@ use std::sync::Arc;
 ///
 /// The buffer intentionally exposes only crate-private APIs so that tensor semantics stay
 /// centralized in this module. All aliasing and uniqueness checks flow through this type.
+#[allow(dead_code)] // methods become used once tensor accessors land in later phases
 #[derive(Clone, Debug)]
 pub(crate) struct Buffer<T> {
     data: Arc<Vec<T>>,
 }
 
+#[allow(dead_code)]
 impl<T> Buffer<T> {
     /// Wrap a freshly allocated vector inside the shared buffer.
     pub(crate) fn from_vec(data: Vec<T>) -> Self {

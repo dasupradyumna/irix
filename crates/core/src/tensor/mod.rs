@@ -53,7 +53,7 @@ use std::{marker::PhantomData, sync::Arc};
 
 use self::{
     buffer::Buffer,
-    layout::{canonical_strides_for, LayoutMarker, RowMajor},
+    layout::{LayoutMarker, RowMajor, canonical_strides_for},
 };
 
 /// Multi-dimensional numeric storage with explicit layout semantics.
@@ -67,6 +67,7 @@ pub struct Tensor<const N: usize, T, L = RowMajor>
 where
     L: LayoutMarker,
 {
+    #[allow(dead_code)] // accessed by later phases once mutation & slicing land
     buffer: Buffer<T>,
     shape: [usize; N],
     strides: [isize; N],
@@ -145,7 +146,7 @@ where
 }
 
 fn validate_shape_dims<const N: usize>(shape: &[usize; N]) -> Result<(), TensorError> {
-    if shape.iter().any(|&dim| dim == 0) {
+    if shape.contains(&0) {
         return Err(TensorError::InvalidShape);
     }
     Ok(())
