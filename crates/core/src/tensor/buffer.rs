@@ -6,7 +6,7 @@ use std::sync::Arc;
 ///
 /// The buffer intentionally exposes only crate-private APIs so that tensor semantics stay
 /// centralized in this module. All aliasing and uniqueness checks flow through this type.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(crate) struct Buffer<T> {
     data: Arc<Vec<T>>,
 }
@@ -40,5 +40,11 @@ impl<T> Buffer<T> {
     /// Mutable slice view, available only when the buffer is uniquely owned.
     pub(crate) fn as_mut_slice(&mut self) -> Option<&mut [T]> {
         Arc::get_mut(&mut self.data).map(Vec::as_mut_slice)
+    }
+}
+
+impl<T> Clone for Buffer<T> {
+    fn clone(&self) -> Self {
+        Self { data: Arc::clone(&self.data) }
     }
 }

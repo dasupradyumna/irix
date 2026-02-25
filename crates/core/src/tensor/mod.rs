@@ -49,7 +49,7 @@ mod error;
 
 pub use error::TensorError;
 
-use core::convert::TryFrom;
+use core::{convert::TryFrom, ops::Range};
 use std::{marker::PhantomData, sync::Arc};
 
 use self::{
@@ -158,6 +158,42 @@ where
         }
         let slice = self.buffer.as_mut_slice()?;
         slice.get_mut(linear)
+    }
+
+    /// Returns a view defined by per-axis ranges sharing the underlying buffer.
+    pub fn slice(&self, ranges: [Range<usize>; N]) -> Result<Self, TensorError> {
+        let mut new_shape = self.shape;
+        let mut new_offset =
+            isize::try_from(self.offset).map_err(|_| TensorError::IndexOutOfBounds)?;
+
+        for (axis, range) in ranges.into_iter().enumerate() {
+            if range.start >= range.end {
+                return Err(TensorError::InvalidShape);
+            }
+            let axis_extent = self.shape[axis];
+            if range.end > axis_extent {
+                return Err(TensorError::IndexOutOfBounds);
+            }
+
+            let start_isize =
+                isize::try_from(range.start).map_err(|_| TensorError::IndexOutOfBounds)?;
+            let delta = self.strides[axis]
+                .checked_mul(start_isize)
+                .ok_or(TensorError::IndexOutOfBounds)?;
+            new_offset = new_offset.checked_add(delta).ok_or(TensorError::IndexOutOfBounds)?;
+
+            new_shape[axis] = range.end - range.start;
+        }
+
+        let new_offset = usize::try_from(new_offset).map_err(|_| TensorError::IndexOutOfBounds)?;
+
+        Ok(Self {
+            buffer: self.buffer.clone(),
+            shape: new_shape,
+            strides: self.strides,
+            offset: new_offset,
+            _layout: PhantomData,
+        })
     }
 }
 
